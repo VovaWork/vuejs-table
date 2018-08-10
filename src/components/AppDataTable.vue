@@ -3,7 +3,7 @@
   section.live-search
 
     .input-field.col.s6
-      input#search.validate(type="text" v-model='search')
+      input#search.validate(type="text")
       label(for="search") Type Name ...
 
     h3 Итого: {{ currencySum }}
@@ -12,93 +12,67 @@
       thead
         tr
           th ID
-          th(ref='th' @click='sortTable($event)') Name
-          th(ref='th' @click='sortTable($event)') Location
-          th(ref='th' @click='sortTable($event)') Currency
+          th(ref='th') Name
+          th(ref='th') Location
+          th(ref='th') Currency
       tbody
-        tr(v-for='testItem in filteredList')
-          td(ref='td' class='data-table__td' @click='editCell') {{ testItem.id }}
-          td(ref='td' class='data-table__td' @click='editCell') {{ testItem.name }}
-          td(ref='td' class='data-table__td' @click='editCell') {{ testItem.location }}
-          td(ref='td' class='data-table__td' @click='editCell') {{ testItem.currency }}
+        tr(v-for='testItem in test')
+          td(ref='td' 
+             class='data-table__td') {{ testItem.id }}
+          td(ref='td' 
+             class='data-table__td') {{ testItem.name }}
+          td(ref='td' 
+             class='data-table__td') {{ testItem.location }}
+          td(ref='td' 
+             class='data-table__td') 
+            span(ref='span') {{ testItem.currency }}
+            input(ref='editSpan'
+                  class='data-table__td-edit' 
+                  type='text' 
+                  v-model='testItem.currency'
+                  @input='calculateSum') 
+            button(type='button'
+                   @click='editTable($event)' 
+                   class='data-table__edit-btn waves-effect waves-light btn') Edit Currency
 
 </template>
 
 <script>
-
-import test from '../data/test.json'
+import { mapState } from 'vuex';
 
 export default {
   data() {
     return {
-      test,
-      search: '',
       currencySum: '',
+      editTableMode: false
     };
-  },
-  methods: {
-    editCell() {
-      $('td').attr('contenteditable', 'true');
-    }
   },
   computed: {
-    filteredList() {
-      return this.test.filter(item => {
-        return item.name.toLowerCase().includes(this.search.toLowerCase());
-      });
-    }
+    ...mapState([
+      'test'
+    ])
   },
-  mounted() {
-    let currencyArr = [];
-    for(let i = 0; i < test.length; i++) {
-      currencyArr.push(test[i].currency);
-    };
+  methods: {
+    calculateSum() {
+      console.log('Hello world');
+    },
+    editTable(event) {
+      this.editTableMode = !this.editTableMode;
+      let targetSpan = event.target.parentNode.children[0];
+      let targetInput = event.target.parentNode.children[1];
 
-    currencyArr.reduce((a, b) => {
-      return this.currencySum = a + b;
-    }, 0);
-
-    var sortOrder;
-    var col;
-  $('th').each(function(col) {
-    $(this).click(function() {
-      if ($(this).is('.asc')) {
-        $(this).removeClass('asc');
-        $(this).addClass('desc selected');
-        sortOrder = -1;
-      } else {
-        $(this).addClass('asc selected');
-        $(this).removeClass('desc');
-        sortOrder = 1;
+      if(this.editTableMode) { 
+        $(targetSpan).css('display', 'none')
+        $(targetInput).css('display', 'block') 
+      } else { 
+        $(targetSpan).css('display', 'block')
+        $(targetInput).css('display', 'none')
       };
-      
-      $(this).siblings().removeClass('asc selected');
-      $(this).siblings().removeClass('desc selected');
-      // arrData - arr of all tr
-      var arrData = $('table').find('tbody >tr:has(td)').get();
-      
-      arrData.sort(function(a, b) {
-        // a, b - tr
-        
-        // eq(col) - find td in current clicked column
-        var val1 = $(a).children('td').eq(col).text().toUpperCase(); 
-        var val2 = $(b).children('td').eq(col).text().toUpperCase();
-        console.log(val1 < val2);
-        
-        if ($.isNumeric(val1) && $.isNumeric(val2)) {
-          return sortOrder == 1 ? val1 - val2 : val2 - val1;
-        } else {
-          return (val1 < val2) ? -sortOrder : (val1 > val2) ? sortOrder : 0;
-        }
-        
-      });
-      
-      $.each(arrData, function(index, row) {
-        $('tbody').append(row);
-      });
-    });    
-  });
 
+    }
+  }, 
+  mounted() {
+    
   }
 }
 </script>
@@ -126,6 +100,26 @@ export default {
       transition: background .2s ease
 
   .data-table__td
-    outline: none
+    position: relative
+
+  tr
+    height: 77px
+    td
+      &:first-child
+        width: 220px
+      &:last-child
+        width: 124px
+        word-break: break-all
+
+  .data-table__td-edit
+    display: none
+    font-size: 15px !important
+    margin-bottom: 0 !important
+
+  .data-table__edit-btn
+    position: absolute
+    right: -170px
+    top: 50%
+    transform: translateY(-50%)
 
 </style>
