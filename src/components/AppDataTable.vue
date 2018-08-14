@@ -3,7 +3,7 @@
   section.live-search
 
     .input-field.col.s6
-      input#search.validate(type="text")
+      input#search.validate(type="text" v-model='search')
       label(for="search") Type Name ...
 
     h3 Итого: {{ currencySum }}
@@ -16,7 +16,7 @@
           th(ref='th') Location
           th(ref='th') Currency
       tbody
-        tr(v-for='testItem in test')
+        tr(v-for='testItem in filteredList' class='data-table__tr')
           td(ref='td' 
              class='data-table__td') {{ testItem.id }}
           td(ref='td' 
@@ -30,13 +30,15 @@
                   class='data-table__td-edit' 
                   type='text' 
                   v-model='testItem.currency')
-            button(type='button'
-                   @click='editTable($event)' 
-                   class='data-table__edit-btn waves-effect waves-light btn') Edit Currency
-            router-link(to='/rowdetails')
-              button(type='button'
-                     class='data-table__row-details waves-effect waves-light btn'
-                     @click='rowDetails(testItem)') Row details
+
+            i(@click='editTable($event)' 
+              class='data-table__action-btn data-table__edit-btn material-icons') edit 
+
+            router-link(to='/rowdetails'
+                        tag='a'
+                        class='data-table__action-btn data-table__row-details'
+                        @click.native='rowDetails(testItem)') 
+                        i.material-icons details
 
 </template>
 
@@ -47,13 +49,19 @@ export default {
   data() {
     return {
       currencySum: '',
-      editTableMode: false
+      editTableMode: false,
+      search: ''
     };
   },
   computed: {
     ...mapState([
       'test'
-    ])
+    ]),
+    filteredList() {
+      return this.test.filter(item => {
+        return item.name.toLowerCase().includes(this.search.toLowerCase());
+      });
+    }
   },
   watch: {
     test: {
@@ -62,7 +70,6 @@ export default {
         for(let i = 0; i < this.test.length; i++) {
           currencyArr.push(Number(this.test[i].currency));
         };
-        console.log(currencyArr);
         currencyArr.reduce((a, b) => {
           return this.currencySum = a + b;
         }, 0);
@@ -89,7 +96,6 @@ export default {
 
     },
     rowDetails(payload) {
-      console.log(payload);
       this.$store.commit('UPDATE_ROW_DETAILS', payload);
     }
   }, 
@@ -131,15 +137,21 @@ export default {
 
   .data-table__td
     position: relative
-
-  tr
     height: 77px
-    td
-      &:first-child
-        width: 220px
-      &:last-child
-        width: 124px
-        word-break: break-all
+    &:first-child
+      width: 220px
+    &:last-child
+      width: 124px
+      word-break: break-all
+      display: flex
+      align-items: center
+      justify-content: space-between
+
+  .data-table__action-btn
+    cursor: pointer
+    color: #ef6c00
+    position: absolute
+    right: -26px
 
   .data-table__td-edit
     display: none
@@ -147,15 +159,10 @@ export default {
     margin-bottom: 0 !important
 
   .data-table__edit-btn
-    position: absolute
-    right: -170px
-    top: 50%
-    transform: translateY(-50%)
+    top: 10px
   
   .data-table__row-details
-    position: absolute
-    right: -310px
-    top: 50%
-    transform: translateY(-50%)
+    top: 45px
+    display: inline-flex
 
 </style>
