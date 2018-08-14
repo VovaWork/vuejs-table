@@ -29,11 +29,14 @@
             input(ref='editSpan'
                   class='data-table__td-edit' 
                   type='text' 
-                  v-model='testItem.currency'
-                  @input='calculateSum') 
+                  v-model='testItem.currency')
             button(type='button'
                    @click='editTable($event)' 
                    class='data-table__edit-btn waves-effect waves-light btn') Edit Currency
+            router-link(to='/rowdetails')
+              button(type='button'
+                     class='data-table__row-details waves-effect waves-light btn'
+                     @click='rowDetails(testItem)') Row details
 
 </template>
 
@@ -52,9 +55,24 @@ export default {
       'test'
     ])
   },
+  watch: {
+    test: {
+      handler() {
+        let currencyArr = [];
+        for(let i = 0; i < this.test.length; i++) {
+          currencyArr.push(Number(this.test[i].currency));
+        };
+        console.log(currencyArr);
+        currencyArr.reduce((a, b) => {
+          return this.currencySum = a + b;
+        }, 0);
+      },
+      deep: true 
+    } 
+  },
   methods: {
     calculateSum() {
-      console.log('Hello world');
+      this.currencySum;
     },
     editTable(event) {
       this.editTableMode = !this.editTableMode;
@@ -69,10 +87,22 @@ export default {
         $(targetInput).css('display', 'none')
       };
 
+    },
+    rowDetails(payload) {
+      console.log(payload);
+      this.$store.commit('UPDATE_ROW_DETAILS', payload);
     }
   }, 
   mounted() {
-    
+
+    let currencyArr = [];
+    for(let i = 0; i < this.test.length; i++) {
+      currencyArr.push(this.test[i].currency);
+    };
+    currencyArr.reduce((a, b) => {
+      return this.currencySum = a + b;
+    }, 0);
+
   }
 }
 </script>
@@ -119,6 +149,12 @@ export default {
   .data-table__edit-btn
     position: absolute
     right: -170px
+    top: 50%
+    transform: translateY(-50%)
+  
+  .data-table__row-details
+    position: absolute
+    right: -310px
     top: 50%
     transform: translateY(-50%)
 

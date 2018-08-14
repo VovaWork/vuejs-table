@@ -1,22 +1,15 @@
 <template lang="pug">
-  .container
-    .row
-      .col.s8.offset-s2
-        AppDataTable
+  main
+    .container
+      .row
+        .col.s8.offset-s2
+          router-link(to='/' class='to-table-btn waves-effect waves-light btn') Data Table
+          router-view
 </template>
 
+<style lang="sass">
 
-<script>
-import AppDataTable from './components/AppDataTable.vue';
-
-export default {
-  name: 'App',
-  components: {
-    AppDataTable
-  }
-}
-</script>
-
-<style>
+.to-table-btn
+  margin: 50px 0 20px
 
 </style>

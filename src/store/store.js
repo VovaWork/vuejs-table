@@ -6,6 +6,12 @@ Vue.use(Vuex);
 
 export const store = new Vuex.Store({
   state: {
-    test
+    test,
+    rowDetails: ''
+  },
+  mutations: {
+    UPDATE_ROW_DETAILS(state, payload) {
+      this.state.rowDetails = payload;
+    }
   }
 });
