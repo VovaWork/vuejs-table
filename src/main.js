@@ -10,7 +10,15 @@ import VueRouter from 'vue-router';
 
 Vue.use(VueRouter);
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
+
+export const eventBus = new Vue({
+  methods: {
+    changeRange(range) {
+      this.$emit('rangeChanged', range);
+    }
+  }
+});
 
 const router = new VueRouter({
   mode: 'history',

@@ -1,56 +1,71 @@
 <template lang="pug">
 
-  section.live-search
+  section
+    section.live-search
 
-    .input-field.col.s6
-      input#search.validate(type="text" v-model='search')
-      label(for="search") Type Name ...
+      .input-field.col.s6
+        input#search.validate(type="text" v-model='search')
+        label(for="search") Type Name ...
 
-    h3 Итого: {{ currencySum }}
+      h3 Итого: {{ currencySum }}
 
-    table.data-table
-      thead
-        tr
-          th ID
-          th(ref='th') Name
-          th(ref='th') Location
-          th(ref='th') Currency
-      tbody
-        tr(v-for='testItem in filteredList' class='data-table__tr')
-          td(ref='td' 
-             class='data-table__td') {{ testItem.id }}
-          td(ref='td' 
-             class='data-table__td') {{ testItem.name }}
-          td(ref='td' 
-             class='data-table__td') {{ testItem.location }}
-          td(ref='td' 
-             class='data-table__td') 
-            span(ref='span') {{ testItem.currency }}
-            input(ref='editSpan'
-                  class='data-table__td-edit' 
-                  type='text' 
-                  v-model='testItem.currency')
+      table.data-table
+        thead
+          tr
+            th ID
+            th(ref='th') Name
+            th(ref='th') Location
+            th(ref='th') Currency
+        tbody
+          tr(v-for='testItem in filteredList.slice(range.start, range.end)' class='data-table__tr')
+            td(ref='td' 
+              class='data-table__td') {{ testItem.id }}
+            td(ref='td' 
+              class='data-table__td') {{ testItem.name }}
+            td(ref='td' 
+              class='data-table__td') {{ testItem.location }}
+            td(ref='td' 
+              class='data-table__td') 
+              span(ref='span') {{ testItem.currency }}
+              input(ref='editSpan'
+                    class='data-table__td-edit' 
+                    type='text' 
+                    v-model='testItem.currency')
 
-            i(@click='editTable($event)' 
-              class='data-table__action-btn data-table__edit-btn material-icons') edit 
+              i(@click='editTable($event)' 
+                class='data-table__action-btn data-table__edit-btn material-icons') edit 
 
-            router-link(to='/rowdetails'
-                        tag='a'
-                        class='data-table__action-btn data-table__row-details'
-                        @click.native='rowDetails(testItem)') 
-                        i.material-icons details
+              router-link(to='/rowdetails'
+                          tag='a'
+                          class='data-table__action-btn data-table__row-details'
+                          @click.native='rowDetails(testItem)') 
+                          i.material-icons details
+
+    Pagination(
+                :itemsPerPage='5'
+                :totalItems='150'
+              )
 
 </template>
 
 <script>
 import { mapState } from 'vuex';
+import { eventBus } from '../main';
+import Pagination from './Pagination.vue';
 
 export default {
+  components: {
+    Pagination
+  },
   data() {
     return {
       currencySum: '',
       editTableMode: false,
-      search: ''
+      search: '',
+      range: {
+        start: 0,
+        end: 10
+      }
     };
   },
   computed: {
@@ -99,6 +114,11 @@ export default {
       this.$store.commit('UPDATE_ROW_DETAILS', payload);
     }
   }, 
+  created() {
+    eventBus.$on('rangeChanged', (range) => {
+      this.range = range;
+    });
+  },
   mounted() {
 
     let currencyArr = [];
