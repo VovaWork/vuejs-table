@@ -1,7 +1,6 @@
 <template lang="pug">
 
   section.pagination
-
     ul.pagination
       li(
           v-for='(button, index) in buttons'
@@ -10,9 +9,9 @@
           class='waves-effect'
           :class='{ active: button.active, disabled: button.disabled }'
         ) 
-        a(  class=''
-            href="#!" 
-            v-html='button.html'
+        a(
+          href="#!" 
+          v-html='button.html'
           )
 
 </template>
@@ -21,11 +20,6 @@
 import { eventBus } from '../main';
 
 export default {
-  data() {
-    return {
-      currentPage: 0
-    };
-  },
   props: {
     totalItems: {
       type: Number,
@@ -33,7 +27,6 @@ export default {
     },
 
     itemsPerPage: {
-      type: Number,
       default: 10
     },
 
@@ -42,10 +35,15 @@ export default {
       default: 5
     }
   },
+  data() {
+    return {
+      currentPage: 0
+    };
+  },
   computed: {
     range() {
-      let start = this.currentPage * this.itemsPerPage;
-      let end = start + this.itemsPerPage;
+      let start = this.currentPage * Number(this.itemsPerPage);
+      let end = start + Number(this.itemsPerPage);
 
       return {
         start, 
@@ -120,10 +118,12 @@ export default {
       return visibleButtonValues;
     }
   },
+  watch: {
+    range: function() {
+      eventBus.changeRange(this.range);
+    }
+  },
   methods: {
-    removeClass() {
-      alert('')
-    },
     getButton(
       page, 
       html, 
@@ -143,8 +143,10 @@ export default {
 
     pageChange(page, range) {
       this.currentPage = page;
-      eventBus.changeRange(range);
-    }
+    },
+  },
+  created() {
+    eventBus.changeRange(this.range);
   }
 }
 </script>

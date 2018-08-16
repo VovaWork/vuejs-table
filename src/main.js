@@ -2,7 +2,7 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue';
 import App from './App.vue';
-import AppDataTable from './components/AppDataTable.vue';
+import DataTable from './components/DataTable.vue';
 import RowDetails from './components/RowDetails.vue';
 import { store } from './store/store';
 import VueRouter from 'vue-router';
@@ -23,12 +23,11 @@ export const eventBus = new Vue({
 const router = new VueRouter({
   mode: 'history',
   routes: [
-    { path: '/', component: AppDataTable },
+    { path: '/', component: DataTable },
     { path: '/rowdetails', component: RowDetails }
   ],
 });
 
-/* eslint-disable no-new */
 new Vue({
   el: '#app',
   store,

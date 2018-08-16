@@ -9,6 +9,13 @@
 
       h3 Итого: {{ currencySum }}
 
+      .col.s6.pull-s6
+        select.choose-items(v-model='itemsNumber')
+          option(value="", disabled="", selected="") Choose items number
+          option(value="5") 5
+          option(value="10") 10
+          option(value="20") 20
+
       table.data-table
         thead
           tr
@@ -42,7 +49,7 @@
                           i.material-icons details
 
     Pagination(
-                :itemsPerPage='5'
+                :itemsPerPage='itemsNumber'
                 :totalItems='150'
               )
 
@@ -62,10 +69,8 @@ export default {
       currencySum: '',
       editTableMode: false,
       search: '',
-      range: {
-        start: 0,
-        end: 10
-      }
+      itemsNumber: 10,
+      range: ''
     };
   },
   computed: {
@@ -128,6 +133,8 @@ export default {
     currencyArr.reduce((a, b) => {
       return this.currencySum = a + b;
     }, 0);
+
+    $('select').formSelect();
 
   }
 }
