@@ -141,6 +141,19 @@ export default {
     $('th').each(function(col) {
       $(this).click(function() {
 
+        if ($(this).is('.asc')) {
+          $(this).removeClass('asc');
+          $(this).addClass('desc selected');
+          sortOrder = -1;
+        } else {
+          $(this).addClass('asc selected');
+          $(this).removeClass('desc');
+          sortOrder = 1;
+        };
+        
+        $(this).siblings().removeClass('asc selected');
+        $(this).siblings().removeClass('desc selected');
+
         var arrData = $('table').find('tbody >tr:has(td)').get();
         arrData.sort(function(a, b) {
           
