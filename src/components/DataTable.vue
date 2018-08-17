@@ -20,11 +20,11 @@
         thead
           tr
             th ID
-            th Name
-            th Location
-            th Currency
+            th(@click='sortItem("name")') Name
+            th(@click='sortItem("location")') Location
+            th(@click='sortItem("currency")') Currency
         tbody
-          tr(v-for='testItem in filteredList.slice(range.start, range.end)' class='data-table__tr')
+          tr(v-for='testItem in sortedItems.slice(range.start, range.end)' class='data-table__tr')
             td(ref='td' 
               class='data-table__td') {{ testItem.id }}
             td(ref='td' 
@@ -70,15 +70,24 @@ export default {
       editTableMode: false,
       search: '',
       itemsNumber: 10,
-      range: ''
+      range: '',
+      currentSort: '',
+      currentSortDir: 'asc',
     };
   },
   computed: {
     ...mapState([
       'test'
     ]),
-    filteredList() {
-      return this.test.filter(item => {
+
+    sortedItems() {
+      return this.test.sort((a,b) => {
+        let modifier = 1;
+        if(this.currentSortDir === 'desc') modifier = -1;
+        if(a[this.currentSort] < b[this.currentSort]) return -1 * modifier;
+        if(a[this.currentSort] > b[this.currentSort]) return 1 * modifier;
+        return 0;
+      }).filter(item => {
         return item.name.toLowerCase().includes(this.search.toLowerCase());
       });
     }
@@ -98,6 +107,13 @@ export default {
     } 
   },
   methods: {
+    sortItem(s) {
+      //if s == current sort, reverse
+      if(s === this.currentSort) {
+        this.currentSortDir = this.currentSortDir==='asc'?'desc':'asc';
+      }
+      this.currentSort = s;
+    },
     calculateSum() {
       this.currencySum;
     },
@@ -136,44 +152,44 @@ export default {
 
     $('select').formSelect();
 
-    var sortOrder;
-    var col;
-    $('th').each(function(col) {
-      $(this).click(function() {
+    // var sortOrder;
+    // var col;
+    // $('th').each(function(col) {
+    //   $(this).click(function() {
 
-        if ($(this).is('.asc')) {
-          $(this).removeClass('asc');
-          $(this).addClass('desc selected');
-          sortOrder = -1;
-        } else {
-          $(this).addClass('asc selected');
-          $(this).removeClass('desc');
-          sortOrder = 1;
-        };
+    //     if ($(this).is('.asc')) {
+    //       $(this).removeClass('asc');
+    //       $(this).addClass('desc selected');
+    //       sortOrder = -1;
+    //     } else {
+    //       $(this).addClass('asc selected');
+    //       $(this).removeClass('desc');
+    //       sortOrder = 1;
+    //     };
         
-        $(this).siblings().removeClass('asc selected');
-        $(this).siblings().removeClass('desc selected');
+    //     $(this).siblings().removeClass('asc selected');
+    //     $(this).siblings().removeClass('desc selected');
 
-        var arrData = $('table').find('tbody >tr:has(td)').get();
-        arrData.sort(function(a, b) {
+    //     var arrData = $('table').find('tbody >tr:has(td)').get();
+    //     arrData.sort(function(a, b) {
           
-          var val1 = $(a).children('td').eq(col).text().toUpperCase();
-          var val2 = $(b).children('td').eq(col).text().toUpperCase();
+    //       var val1 = $(a).children('td').eq(col).text().toUpperCase();
+    //       var val2 = $(b).children('td').eq(col).text().toUpperCase();
           
-          if ($.isNumeric(val1) && $.isNumeric(val2)) {
-            return sortOrder == 1 ? val1 - val2 : val2 - val1;
-          } else {
-            return (val1 < val2) ? -sortOrder : (val1 > val2) ? sortOrder : 0;
-          }
+    //       if ($.isNumeric(val1) && $.isNumeric(val2)) {
+    //         return sortOrder == 1 ? val1 - val2 : val2 - val1;
+    //       } else {
+    //         return (val1 < val2) ? -sortOrder : (val1 > val2) ? sortOrder : 0;
+    //       }
           
-        });
+    //     });
         
-        $.each(arrData, function(index, row) {
-          $('tbody').append(row);
-        });
+    //     $.each(arrData, function(index, row) {
+    //       $('tbody').append(row);
+    //     });
 
-      });
-    });
+    //   });
+    // });
     
 
   }
