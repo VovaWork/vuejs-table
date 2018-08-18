@@ -9,12 +9,7 @@
 
       h3 Итого: {{ currencySum }}
 
-      .col.s6.pull-s6
-        select.choose-items(ref='itemsNumberSelect', v-model='itemsNumber')
-          option(value="", disabled="", selected="") Choose items number
-          option(value="5") 5
-          option(value="10") 10
-          option(value="20") 20
+      SelectItemsNumber
 
       table.data-table
         thead
@@ -48,6 +43,7 @@
                           @click.native='rowDetails(testItem)') 
                           i.material-icons details
 
+
     Pagination(
                 :itemsPerPage='itemsNumber'
                 :totalItems='150'
@@ -58,10 +54,12 @@
 <script>
 import { mapState } from 'vuex';
 import { eventBus } from '../main';
+import SelectItemsNumber from './SelectItemsNumber.vue';
 import Pagination from './Pagination.vue';
 
 export default {
   components: {
+    SelectItemsNumber,
     Pagination
   },
   data() {
@@ -69,7 +67,6 @@ export default {
       currencySum: '',
       editTableMode: false,
       search: '',
-      itemsNumber: 10,
       range: '',
       currentSort: '',
       currentSortDir: 'asc',
@@ -79,6 +76,10 @@ export default {
     ...mapState([
       'test'
     ]),
+
+    itemsNumber() {
+      return this.$store.state.tableItemsNumber;
+    },
 
     sortedItems() {
       return this.test.sort((a,b) => {
