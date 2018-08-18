@@ -7,12 +7,10 @@
           :key='index'
           @click='pageChange(button.page, range)'
           class='waves-effect'
-          :class='{ active: button.active, disabled: button.disabled }'
-        ) 
+          :class='{ active: button.active, disabled: button.disabled }') 
         a(
           href="#!" 
-          v-html='button.html'
-          )
+          v-html='button.html')
 
 </template>
 
@@ -123,6 +121,9 @@ export default {
       eventBus.changeRange(this.range);
     }
   },
+  created() {
+    eventBus.changeRange(this.range);
+  },
   methods: {
     getButton(
       page, 
@@ -144,9 +145,6 @@ export default {
     pageChange(page, range) {
       this.currentPage = page;
     },
-  },
-  created() {
-    eventBus.changeRange(this.range);
   }
 }
 </script>

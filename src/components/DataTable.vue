@@ -43,11 +43,9 @@
                           @click.native='rowDetails(testItem)') 
                           i.material-icons details
 
-
-    Pagination(
-                :itemsPerPage='itemsNumber'
-                :totalItems='150'
-              )
+    TablePagination(
+                    :itemsPerPage='itemsNumber'
+                    :totalItems='150')
 
 </template>
 
@@ -55,12 +53,12 @@
 import { mapState } from 'vuex';
 import { eventBus } from '../main';
 import SelectItemsNumber from './SelectItemsNumber.vue';
-import Pagination from './Pagination.vue';
+import TablePagination from './TablePagination.vue';
 
 export default {
   components: {
     SelectItemsNumber,
-    Pagination
+    TablePagination
   },
   data() {
     return {
@@ -74,11 +72,11 @@ export default {
   },
   computed: {
     ...mapState([
-      'test'
+      'test', 'tableItemsNumber'
     ]),
 
     itemsNumber() {
-      return this.$store.state.tableItemsNumber;
+      return this.tableItemsNumber;
     },
 
     sortedItems() {
@@ -106,6 +104,24 @@ export default {
       },
       deep: true 
     } 
+  },
+  created() {
+    eventBus.$on('rangeChanged', (range) => {
+      this.range = range;
+    });
+  },
+  mounted() {
+
+    let currencyArr = [];
+    for(let i = 0; i < this.test.length; i++) {
+      currencyArr.push(this.test[i].currency);
+    };
+    currencyArr.reduce((a, b) => {
+      return this.currencySum = a + b;
+    }, 0);
+
+    M.FormSelect.init(this.$refs.itemsNumberSelect);
+
   },
   methods: {
     sortItem(s) {
@@ -135,24 +151,6 @@ export default {
     rowDetails(payload) {
       this.$store.commit('UPDATE_ROW_DETAILS', payload);
     }
-  }, 
-  created() {
-    eventBus.$on('rangeChanged', (range) => {
-      this.range = range;
-    });
-  },
-  mounted() {
-
-    let currencyArr = [];
-    for(let i = 0; i < this.test.length; i++) {
-      currencyArr.push(this.test[i].currency);
-    };
-    currencyArr.reduce((a, b) => {
-      return this.currencySum = a + b;
-    }, 0);
-
-    M.FormSelect.init(this.$refs.itemsNumberSelect);
-
   }
 }
 </script>
