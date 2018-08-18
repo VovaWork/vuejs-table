@@ -1,7 +1,7 @@
 {
   "name": "search",
   "version": "1.0.0",
-  "description": "A Vue.js project",
+  "description": "Vue js data table app",
   "author": "Vova Danilchenko <vovadanilchenkoo@gmail.com>",
   "private": true,
   "scripts": {

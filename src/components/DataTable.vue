@@ -7,7 +7,7 @@
         input#search.validate(type="text" v-model='search')
         label(for="search") Type Name ...
 
-      h3 Итого: {{ currencySum }}
+      h3 Total: {{ currencySum }}
 
 
       SelectItemsNumber
