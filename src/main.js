@@ -1,13 +1,36 @@
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
-import Vue from 'vue'
-import App from './App'
+import Vue from 'vue';
+import App from './App.vue';
+import DataTable from './components/DataTable.vue';
+import RowDetails from './components/RowDetails.vue';
+import { store } from './store/store';
+import VueRouter from 'vue-router';
 
-Vue.config.productionTip = false
 
-/* eslint-disable no-new */
+Vue.use(VueRouter);
+
+Vue.config.productionTip = false;
+
+export const eventBus = new Vue({
+  methods: {
+    changeRange(range) {
+      this.$emit('rangeChanged', range);
+    }
+  }
+});
+
+const router = new VueRouter({
+  mode: 'history',
+  routes: [
+    { path: '/', component: DataTable },
+    { path: '/rowdetails', component: RowDetails }
+  ],
+});
+
 new Vue({
   el: '#app',
-  components: { App },
-  template: '<App/>'
+  store,
+  router,
+  render: h => h(App)
 })
