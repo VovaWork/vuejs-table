@@ -8,7 +8,8 @@ export const store = new Vuex.Store({
   state: {
     test,
     rowDetails: '',
-    tableItemsNumber: 10
+    tableItemsNumber: 10,
+    paginationRange: ''
   },
   mutations: {
     UPDATE_ROW_DETAILS(state, payload) {
@@ -16,6 +17,9 @@ export const store = new Vuex.Store({
     }, 
     CHANGE_TABLE_ITEMS_NUMBER(state, payload) {
       this.state.tableItemsNumber = payload;
+    },
+    CHANGE_PAGINATION_RANGE(state, payload) {
+      this.state.paginationRange = payload;
     }
   }
 });

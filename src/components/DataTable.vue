@@ -9,6 +9,7 @@
 
       h3 Итого: {{ currencySum }}
 
+
       SelectItemsNumber
 
       table.data-table
@@ -65,15 +66,18 @@ export default {
       currencySum: '',
       editTableMode: false,
       search: '',
-      range: '',
       currentSort: '',
       currentSortDir: 'asc',
     };
   },
   computed: {
     ...mapState([
-      'test', 'tableItemsNumber'
+      'test', 'tableItemsNumber', 'paginationRange'
     ]),
+
+    range() {
+      return this.paginationRange;
+    },
 
     itemsNumber() {
       return this.tableItemsNumber;
@@ -104,11 +108,6 @@ export default {
       },
       deep: true 
     } 
-  },
-  created() {
-    eventBus.$on('rangeChanged', (range) => {
-      this.range = range;
-    });
   },
   mounted() {
 

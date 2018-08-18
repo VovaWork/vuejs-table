@@ -118,11 +118,11 @@ export default {
   },
   watch: {
     range: function() {
-      eventBus.changeRange(this.range);
+      this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
     }
   },
   created() {
-    eventBus.changeRange(this.range);
+    this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
   },
   methods: {
     getButton(
