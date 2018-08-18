@@ -15,10 +15,10 @@
       table.data-table
         thead
           tr
-            th(ref='theadItem') ID
-            th(@click='sortItem("name")') Name
-            th(@click='sortItem("location")') Location
-            th(@click='sortItem("currency")') Currency
+            th(class='data-table__th' ref='theadItem') ID
+            th(class='data-table__th' @click='sortItem("name")') Name
+            th(class='data-table__th' @click='sortItem("location")') Location
+            th(class='data-table__th' @click='sortItem("currency")') Currency
         tbody
           tr(v-for='testItem in sortedItems.slice(range.start, range.end)' class='data-table__tr')
             td(ref='td' 
@@ -169,12 +169,13 @@ export default {
   .data-table
     margin-top: 50px
 
-  th
-    cursor: pointer
-    transition: background .2s ease
-    &:hover
-      background: #e0e0e0
+  .data-table__th
+    &:not(:first-child)
+      cursor: pointer
       transition: background .2s ease
+      &:hover
+        background: #e0e0e0
+        transition: background .2s ease
 
   .data-table__td
     position: relative
