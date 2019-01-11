@@ -13,6 +13,9 @@ Features
 - sorting 
 - pagination
 
+Запросы смотреть в компонентах DataTable, SelectItemsNumber, TablePagination.
+В файле src/config/config.json содержится адрес запроса на сервер.
+
 ## Build Setup
 
 ``` bash
