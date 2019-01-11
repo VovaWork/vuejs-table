@@ -17,14 +17,15 @@ Features
 
 ``` bash
 # install dependencies
-npm install
+yarn
 
 # serve with hot reload at localhost:8080
-npm run dev
+yarn start
+
+# run test server
+node server/app.js
 
 # build for production with minification
-npm run build
+yarn run build
 
-# build for production and view the bundle analyzer report
-npm run build --report
 ```
