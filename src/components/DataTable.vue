@@ -1,14 +1,15 @@
 <template lang="pug">
 
   section
+
     section.live-search
 
-      .input-field.col.s6
-        input#search.validate(type="text" v-model='search')
-        label(for="search") Type Name ...
+      form(@submit.prevent='searchString')
+        .input-field.col.s6
+          input#search.validate(type="text" v-model='search')
+          label(for="search") Type Name ...
 
       h3 Total: {{ currencySum }}
-
 
       SelectItemsNumber
 
@@ -16,11 +17,11 @@
         thead
           tr
             th(class='data-table__th' ref='theadItem') ID
-            th(class='data-table__th' @click='sortItem("name")') Name
-            th(class='data-table__th' @click='sortItem("location")') Location
-            th(class='data-table__th' @click='sortItem("currency")') Currency
+            th(class='data-table__th' ref='theadName' @click='sortBy("name")') Name
+            th(class='data-table__th' ref='theadName' @click='sortBy("location")') Location
+            th(class='data-table__th' ref='theadName' @click='sortBy("currency")') Currency
         tbody
-          tr(v-for='testItem in sortedItems.slice(range.start, range.end)' class='data-table__tr')
+          tr(v-for='testItem in test' class='data-table__tr')
             td(ref='td' 
               class='data-table__td') {{ testItem.id }}
             td(ref='td' 
@@ -45,16 +46,19 @@
                           i.material-icons details
 
     TablePagination(
+                    v-if='totalItems'
                     :itemsPerPage='itemsNumber'
-                    :totalItems='150')
+                    :totalItems='totalItems')
 
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import { eventBus } from '../main';
-import SelectItemsNumber from './SelectItemsNumber.vue';
-import TablePagination from './TablePagination.vue';
+import { mapState } from 'vuex'
+import { eventBus } from '../main'
+import SelectItemsNumber from './SelectItemsNumber.vue'
+import TablePagination from './TablePagination.vue'
+import axios from 'axios'
+import serverConfig from '../config/config.json'
 
 export default {
   components: {
@@ -68,7 +72,8 @@ export default {
       search: '',
       currentSort: '',
       currentSortDir: 'asc',
-    };
+      totalItems: 0
+    }
   },
   computed: {
     ...mapState([
@@ -76,15 +81,55 @@ export default {
     ]),
 
     range() {
-      return this.paginationRange;
+      return this.paginationRange
     },
 
     itemsNumber() {
-      return this.tableItemsNumber;
+      return this.tableItemsNumber
     },
 
     sortedItems() {
       return this.test.sort((a,b) => {
+        let modifier = 1
+        if(this.currentSortDir === 'desc') modifier = -1
+        if(a[this.currentSort] < b[this.currentSort]) return -1 * modifier
+        if(a[this.currentSort] > b[this.currentSort]) return 1 * modifier
+        return 0
+      }).filter(item => {
+        return item.name.toLowerCase().includes(this.search.toLowerCase())
+      })
+    }
+  },
+  beforeMount() {
+    axios.get(serverConfig.host)
+      .then(res => {
+          this.loading = false;
+          this.currencySum = res.data.total
+          this.totalItems = res.data.count
+          this.$store.commit('SET_TEST_DATA', res.data.payload)
+      })
+      .catch(err => console.log(err))
+  },
+  mounted() {
+    M.FormSelect.init(this.$refs.itemsNumberSelect)
+  },
+  methods: {
+    searchString() {
+      const data = JSON.stringify({
+        searchString: this.search
+      });
+
+      axios.post(serverConfig.host, data)
+        .then(res => {
+          this.currencySum = res.data.total
+          this.$store.commit('SET_TEST_DATA', res.data.payload)
+        })
+        .catch(err => console.log(err))
+    },
+
+    sortBy(type) {
+
+      this.$store.state.test.sort((a,b) => {
         let modifier = 1;
         if(this.currentSortDir === 'desc') modifier = -1;
         if(a[this.currentSort] < b[this.currentSort]) return -1 * modifier;
@@ -93,62 +138,44 @@ export default {
       }).filter(item => {
         return item.name.toLowerCase().includes(this.search.toLowerCase());
       });
-    }
-  },
-  watch: {
-    test: {
-      handler() {
-        let currencyArr = [];
-        for(let i = 0; i < this.test.length; i++) {
-          currencyArr.push(Number(this.test[i].currency));
-        };
-        currencyArr.reduce((a, b) => {
-          return this.currencySum = a + b;
-        }, 0);
-      },
-      deep: true 
-    } 
-  },
-  mounted() {
+      
+      if(type === this.currentSort) {
+        this.currentSortDir = this.currentSortDir==='asc'?'desc':'asc'
+      };
+      this.currentSort = type;
 
-    let currencyArr = [];
-    for(let i = 0; i < this.test.length; i++) {
-      currencyArr.push(this.test[i].currency);
-    };
-    currencyArr.reduce((a, b) => {
-      return this.currencySum = a + b;
-    }, 0);
+      const data = JSON.stringify({
+        sortBy: type,
+        order: this.currentSortDir
+      })
 
-    M.FormSelect.init(this.$refs.itemsNumberSelect);
+      console.log(data)
 
-  },
-  methods: {
-    sortItem(s) {
-      //if s == current sort, reverse
-      if(s === this.currentSort) {
-        this.currentSortDir = this.currentSortDir==='asc'?'desc':'asc';
-      }
-      this.currentSort = s;
+      axios.post(serverConfig.host, data)
+        .then((req, res) => {
+          this.$store.commit('SET_TEST_DATA', res.data.payload)
+        })
+        .catch(err => console.log(err))
     },
-    calculateSum() {
-      this.currencySum;
-    },
+
     editTable(event) {
-      this.editTableMode = !this.editTableMode;
-      let targetSpan = event.target.parentNode.children[0];
-      let targetInput = event.target.parentNode.children[1];
+      this.editTableMode = !this.editTableMode
+      let targetSpan = event.target.parentNode.children[0]
+      let targetInput = event.target.parentNode.children[1]
+      let targetSpanContent = targetSpan.textContent
+      console.log(targetSpanContent)
 
       if(this.editTableMode) { 
-        targetSpan.style.cssText = 'display: none';
-        targetInput.style.cssText = 'display: block'; 
+        targetSpan.style.cssText = 'display: none'
+        targetInput.style.cssText = 'display: block' 
       } else { 
-        targetSpan.style.cssText = 'display: block';
-        targetInput.style.cssText = 'display: none';
-      };
+        targetSpan.style.cssText = 'display: block'
+        targetInput.style.cssText = 'display: none'
+      }
 
     },
     rowDetails(payload) {
-      this.$store.commit('UPDATE_ROW_DETAILS', payload);
+      this.$store.commit('UPDATE_ROW_DETAILS', payload)
     }
   }
 }
@@ -156,6 +183,18 @@ export default {
 
 
 <style lang="sass">
+
+  .preloader
+    display: flex
+    align-items: center
+    justify-content: center
+    position: fixed
+    width: 100%
+    height: 100%
+    left: 0
+    top: 0
+    background: rgba(0, 0, 0, 0.4)
+    z-index: 2
 
   .live-search
     display: flex

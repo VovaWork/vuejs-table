@@ -1,17 +1,23 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import test from '../data/test.json';
+// import test from '../data/test.json';
 
 Vue.use(Vuex);
 
 export const store = new Vuex.Store({
   state: {
-    test,
+    test: '',
     rowDetails: '',
-    tableItemsNumber: 10,
+    tableItemsNumber: 5,
     paginationRange: ''
   },
   mutations: {
+    SET_TEST_DATA(state, payload) {
+      this.state.test = payload;
+    },
+    SET_CURRENT_PAGE(state, payload) {
+      this.state.currentPage = payload;
+    },
     UPDATE_ROW_DETAILS(state, payload) {
       this.state.rowDetails = payload;
     }, 

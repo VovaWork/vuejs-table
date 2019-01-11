@@ -8,6 +8,9 @@
 </template>
 
 <script>
+import axios from 'axios';
+import serverConfig from '../config/config.json';
+
 export default {
   data() {
     return {
@@ -17,6 +20,16 @@ export default {
   watch: {
     itemsNumber: function() {
       this.$store.commit('CHANGE_TABLE_ITEMS_NUMBER', this.itemsNumber);
+
+      const data = JSON.stringify({
+        perPage: this.itemsNumber
+      });
+
+      axios.post(serverConfig.host, data)
+        .then((req, res) => {
+          this.$store.commit('SET_TEST_DATA', res.data.payload)
+        })
+        .catch(err => console.log(err));
     }
   },
   mounted() {

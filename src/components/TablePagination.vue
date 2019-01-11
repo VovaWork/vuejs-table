@@ -16,6 +16,8 @@
 
 <script>
 import { eventBus } from '../main';
+import axios from 'axios';
+import serverConfig from '../config/config.json';
 
 export default {
   props: {
@@ -118,10 +120,12 @@ export default {
   },
   watch: {
     range: function() {
+      // console.log(this.range)
       this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
     }
   },
   created() {
+    console.log(this.range)
     this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
   },
   methods: {
@@ -143,6 +147,19 @@ export default {
     },
 
     pageChange(page, range) {
+      // Имеется ввиду что с помощью обьекта range на сервере обрежется массив обьектов с записями
+      // в диапазоне range.start, range.end. То есть для каждой страницы свой диапазон обьектов.
+      const data = JSON.stringify({
+        start: range.start,
+        end: range.end
+      });
+
+      axios.post(serverConfig.host, data)
+        .then(res => {
+          this.currentPage = res.data.page;
+          this.$store.commit('SET_TEST_DATA', res.data.payload);
+        })
+        .catch(err => console.log(err));
       this.currentPage = page;
     },
   }
