@@ -42,8 +42,8 @@ export default {
   },
   computed: {
     range() {
-      let start = this.currentPage * Number(this.itemsPerPage);
-      let end = start + Number(this.itemsPerPage);
+      let start = this.currentPage * Number(this.itemsPerPage); // currentPage|itemsPerPage
+      let end = start + Number(this.itemsPerPage); // start|itemsPerPage
 
       return {
         start, 
@@ -52,11 +52,11 @@ export default {
     },
 
     totalPages() {
-      return Math.ceil(this.totalItems / this.itemsPerPage);
+      return Math.ceil(this.totalItems / this.itemsPerPage); // totalItems|itemsPerPage - default values
     },
 
     buttons() {
-      let buttons = this.visibleButtonValues.map(value => {
+      let buttons = this.visibleButtonValues.map(value => {  // visibleButtonValues - массив с 7 элементами который хранит числа, числа это номера страниц который отображаются
         return value === '...'
           ? this.getButton(undefined, '...', true, false)
           : this.getButton(value)
@@ -78,20 +78,20 @@ export default {
         true
       ));
 
-      return buttons;
+      return buttons; // array of button objects
     },
 
-    visibleButtonValues() {
-      let maxVisiblePagesWithoutActiveOne = this.maxVisiblePages - 1;
-      let diffWithThreeDot = (maxVisiblePagesWithoutActiveOne / 2) + 1;
-      let totalButtonsWithoutFirstLastNextAndPrevious = this.maxVisiblePages + 2;
+    visibleButtonValues() { // возвращает массив с 7 элементами - это числа(видимые страницы без первой,последней,следующей, предидущей)
+      let maxVisiblePagesWithoutActiveOne = this.maxVisiblePages - 1; // 4
+      let diffWithThreeDot = (maxVisiblePagesWithoutActiveOne / 2) + 1; // 2 + 1
+      let totalButtonsWithoutFirstLastNextAndPrevious = this.maxVisiblePages + 2; // 7
 
-      let startVisibleButton = this.currentPage - Math.floor(diffWithThreeDot);
+      let startVisibleButton = this.currentPage - Math.floor(diffWithThreeDot); // 0 - 3
       if (startVisibleButton < 1) {
         startVisibleButton = 1;
       };
 
-      let endVisibleButton = startVisibleButton + totalButtonsWithoutFirstLastNextAndPrevious;
+      let endVisibleButton = startVisibleButton + totalButtonsWithoutFirstLastNextAndPrevious; // 8
       if (endVisibleButton > this.totalPages - 1) {
         endVisibleButton = this.totalPages - 1;
       };
@@ -115,17 +115,15 @@ export default {
         visibleButtonValues[visibleButtonValues.length - 1] = '...';
       };
 
-      return visibleButtonValues;
+      return visibleButtonValues; // array with 7 elements
     }
   },
   watch: {
     range: function() {
-      // console.log(this.range)
       this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
     }
   },
   created() {
-    console.log(this.range)
     this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
   },
   methods: {
@@ -149,18 +147,27 @@ export default {
     pageChange(page, range) {
       // Имеется ввиду что с помощью обьекта range на сервере обрежется массив обьектов с записями
       // в диапазоне range.start, range.end. То есть для каждой страницы свой диапазон обьектов.
-      const data = JSON.stringify({
-        start: range.start,
-        end: range.end
-      });
-
-      axios.post(serverConfig.host, data)
-        .then(res => {
-          this.currentPage = res.data.page;
-          this.$store.commit('SET_TEST_DATA', res.data.payload);
-        })
-        .catch(err => console.log(err));
+      this.$store.commit('SET_LOADING_STATE', true);
       this.currentPage = page;
+      console.log(`${range.start} ${range.end} `);
+
+      const self = this;
+      const data = {
+        range: {
+          start: range.start,
+          end: range.end
+        }
+      };
+
+      setTimeout(function() {
+        axios.post(`${serverConfig.host}/pageChange`, data)
+          .then(res => {
+            self.$store.commit('SET_TEST_DATA', res.data.payload);
+            self.$store.commit('SET_LOADING_STATE', false);
+          })
+          .catch(err => console.log(err));
+        console.log(page);
+      }, 800, self);
     },
   }
 }

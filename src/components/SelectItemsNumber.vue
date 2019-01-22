@@ -19,17 +19,22 @@ export default {
   },
   watch: {
     itemsNumber: function() {
+      this.$store.commit('SET_LOADING_STATE', true);
       this.$store.commit('CHANGE_TABLE_ITEMS_NUMBER', this.itemsNumber);
-
-      const data = JSON.stringify({
+      const self = this;
+      const data = {
         perPage: this.itemsNumber
-      });
+      };
 
-      axios.post(serverConfig.host, data)
-        .then((req, res) => {
-          this.$store.commit('SET_TEST_DATA', res.data.payload)
-        })
-        .catch(err => console.log(err));
+      setTimeout(function() {
+        axios.post(`${serverConfig.host}/itemsNumber`, data)
+          .then( res => {
+            console.log(res);
+            self.$store.commit('SET_TEST_DATA', res.data.payload)
+            self.$store.commit('SET_LOADING_STATE', false);
+          })
+          .catch(err => console.log(err));
+      }, 800, self);
     }
   },
   mounted() {

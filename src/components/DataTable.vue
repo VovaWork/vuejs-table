@@ -2,6 +2,16 @@
 
   section
 
+    .preloader(v-if='loading')
+      .preloader-wrapper.big.active
+        .spinner-layer.spinner-blue-only
+          .circle-clipper.left
+            .circle
+          .gap-patch
+            .circle
+          .circle-clipper.right
+            .circle
+
     section.live-search
 
       form(@submit.prevent='searchString')
@@ -23,20 +33,20 @@
         tbody
           tr(v-for='testItem in test' class='data-table__tr')
             td(ref='td' 
-              class='data-table__td') {{ testItem.id }}
+               class='data-table__td') {{ testItem.id }}
             td(ref='td' 
-              class='data-table__td') {{ testItem.name }}
+               class='data-table__td') {{ testItem.name }}
             td(ref='td' 
-              class='data-table__td') {{ testItem.location }}
+               class='data-table__td') {{ testItem.location }}
             td(ref='td' 
-              class='data-table__td') 
+               class='data-table__td') 
               span(ref='span') {{ testItem.currency }}
               input(ref='editSpan'
                     class='data-table__td-edit' 
                     type='text' 
                     v-model='testItem.currency')
 
-              i(@click='editTable($event)' 
+              i(@click='editTable($event, testItem)' 
                 class='data-table__action-btn data-table__edit-btn material-icons') edit 
 
               router-link(to='/rowdetails'
@@ -72,12 +82,13 @@ export default {
       search: '',
       currentSort: '',
       currentSortDir: 'asc',
-      totalItems: 0
+      totalItems: 0,
+      prevValue: ''
     }
   },
   computed: {
     ...mapState([
-      'test', 'tableItemsNumber', 'paginationRange'
+      'loading', 'test', 'tableItemsNumber', 'paginationRange'
     ]),
 
     range() {
@@ -101,33 +112,43 @@ export default {
     }
   },
   beforeMount() {
-    axios.get(serverConfig.host)
-      .then(res => {
-          this.loading = false;
-          this.currencySum = res.data.total
-          this.totalItems = res.data.count
-          this.$store.commit('SET_TEST_DATA', res.data.payload)
-      })
-      .catch(err => console.log(err))
+    const self = this;
+    setTimeout(function() {
+      axios.get(serverConfig.host)
+        .then((res) => {
+          self.currencySum = res.data.total;
+          self.$store.commit('SET_TEST_DATA', res.data.payload);
+          self.totalItems = res.data.count;
+          self.$store.commit('SET_LOADING_STATE', false);
+        })
+        .catch(err => console.log(err));
+    }, 800, self);
   },
   mounted() {
     M.FormSelect.init(this.$refs.itemsNumberSelect)
   },
   methods: {
     searchString() {
-      const data = JSON.stringify({
+      this.$store.commit('SET_LOADING_STATE', true);
+      const self = this;
+      const data = {
         searchString: this.search
-      });
+      };
 
-      axios.post(serverConfig.host, data)
-        .then(res => {
-          this.currencySum = res.data.total
-          this.$store.commit('SET_TEST_DATA', res.data.payload)
-        })
-        .catch(err => console.log(err))
+      setTimeout(function() {
+        axios.post(`${serverConfig.host}/searchString`, data)
+          .then(res => {
+            self.currencySum = res.data.total;
+            self.$store.commit('SET_TEST_DATA', res.data.payload);
+            self.totalItems = res.data.count;
+            self.$store.commit('SET_LOADING_STATE', false);
+          })
+          .catch(err => console.log(err));
+      }, 800, self);
     },
 
     sortBy(type) {
+      this.$store.commit('SET_LOADING_STATE', true);
 
       this.$store.state.test.sort((a,b) => {
         let modifier = 1;
@@ -144,33 +165,62 @@ export default {
       };
       this.currentSort = type;
 
-      const data = JSON.stringify({
+      const self = this;
+      const data = {
+        // Обьект range - диапазон(offset) записей для каждой страницы
+        range: {
+          start: this.paginationRange.start,
+          end: this.paginationRange.end
+        },
         sortBy: type,
-        order: this.currentSortDir
-      })
+        order: this.currentSortDir,
+      };
 
-      console.log(data)
-
-      axios.post(serverConfig.host, data)
-        .then((req, res) => {
-          this.$store.commit('SET_TEST_DATA', res.data.payload)
-        })
-        .catch(err => console.log(err))
+      setTimeout(function() {
+        axios.post(`${serverConfig.host}/sortBy`, data)
+          .then(res => {
+            console.log(res.data)
+            self.$store.commit('SET_TEST_DATA', res.data.payload);
+            self.$store.commit('SET_LOADING_STATE', false);
+          })
+          .catch(err => console.log(err));
+      }, 800, self);
     },
 
-    editTable(event) {
-      this.editTableMode = !this.editTableMode
-      let targetSpan = event.target.parentNode.children[0]
-      let targetInput = event.target.parentNode.children[1]
-      let targetSpanContent = targetSpan.textContent
-      console.log(targetSpanContent)
+    editTable(event, testItem) {
+      this.editTableMode = !this.editTableMode;
+      let targetSpan = event.target.parentNode.children[0];
+      let targetInput = event.target.parentNode.children[1];
+      let targetSpanContent = targetSpan.textContent;
+      var prevValue;
 
       if(this.editTableMode) { 
-        targetSpan.style.cssText = 'display: none'
-        targetInput.style.cssText = 'display: block' 
+        targetSpan.style.cssText = 'display: none';
+        targetInput.style.cssText = 'display: block';
+        this.prevValue = targetSpan.textContent; 
       } else { 
-        targetSpan.style.cssText = 'display: block'
-        targetInput.style.cssText = 'display: none'
+        targetSpan.style.cssText = 'display: block';
+        targetInput.style.cssText = 'display: none';
+        if(this.prevValue !== targetSpan.textContent) {
+          this.$store.commit('SET_LOADING_STATE', true);
+          const self = this;
+          const parametr = {
+            self, testItem
+          };
+
+          setTimeout(function() {
+            const data = {
+              newCurerncy: testItem
+            };
+
+            axios.post(`${serverConfig.host}/recalculateTotal`, data)
+              .then(res => {
+                self.currencySum = res.data.total;
+                self.$store.commit('SET_LOADING_STATE', false);
+              })
+              .catch(err => console.log(err));
+          }, 800, self, testItem);
+        }
       }
 
     },

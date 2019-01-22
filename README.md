@@ -13,22 +13,18 @@ Features
 - sorting 
 - pagination
 
-Запросы смотреть в компонентах DataTable, SelectItemsNumber, TablePagination.
-В файле src/config/config.json содержится адрес запроса на сервер.
-
 ## Build Setup
 
 ``` bash
 # install dependencies
-yarn
+npm install
 
 # serve with hot reload at localhost:8080
-yarn start
-
-# run test server
-node server/app.js
+npm run dev
 
 # build for production with minification
-yarn run build
+npm run build
 
+# build for production and view the bundle analyzer report
+npm run build --report
 ```
