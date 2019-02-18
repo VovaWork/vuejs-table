@@ -16,10 +16,10 @@
 
       form(@submit.prevent='searchString')
         .input-field.col.s6
-          input#search.validate(type="text" v-model='search')
+          input#search.validate(type="text" v-model='sendData.searchString')
           label(for="search") Type Name ...
 
-      h3 Total: {{ currencySum }}
+      h3 Total: {{ sendData.total }}
 
       SelectItemsNumber
 
@@ -31,7 +31,7 @@
             th(class='data-table__th' ref='theadName' @click='sortBy("location")') Location
             th(class='data-table__th' ref='theadName' @click='sortBy("currency")') Currency
         tbody
-          tr(v-for='testItem in test' class='data-table__tr')
+          tr(v-for='testItem in sendData.payload' class='data-table__tr')
             td(ref='td' 
                class='data-table__td') {{ testItem.id }}
             td(ref='td' 
@@ -55,20 +55,16 @@
                           @click.native='rowDetails(testItem)') 
                           i.material-icons details
 
-    TablePagination(
-                    v-if='totalItems'
-                    :itemsPerPage='itemsNumber'
-                    :totalItems='totalItems')
+    TablePagination(v-if='sendData.count')
 
 </template>
 
 <script>
-import { mapState } from 'vuex'
-import { eventBus } from '../main'
-import SelectItemsNumber from './SelectItemsNumber.vue'
-import TablePagination from './TablePagination.vue'
-import axios from 'axios'
-import serverConfig from '../config/config.json'
+import { mapState } from 'vuex';
+import SelectItemsNumber from './SelectItemsNumber.vue';
+import TablePagination from './TablePagination.vue';
+import axios from 'axios';
+import serverConfig from '../config/config.json';
 
 export default {
   components: {
@@ -77,48 +73,21 @@ export default {
   },
   data() {
     return {
-      currencySum: '',
       editTableMode: false,
-      search: '',
-      currentSort: '',
-      currentSortDir: 'asc',
-      totalItems: 0,
       prevValue: ''
     }
   },
   computed: {
     ...mapState([
-      'loading', 'test', 'tableItemsNumber', 'paginationRange'
-    ]),
-
-    range() {
-      return this.paginationRange
-    },
-
-    itemsNumber() {
-      return this.tableItemsNumber
-    },
-
-    sortedItems() {
-      return this.test.sort((a,b) => {
-        let modifier = 1
-        if(this.currentSortDir === 'desc') modifier = -1
-        if(a[this.currentSort] < b[this.currentSort]) return -1 * modifier
-        if(a[this.currentSort] > b[this.currentSort]) return 1 * modifier
-        return 0
-      }).filter(item => {
-        return item.name.toLowerCase().includes(this.search.toLowerCase())
-      })
-    }
+      'loading', 'sendData'
+    ])
   },
   beforeMount() {
     const self = this;
     setTimeout(function() {
       axios.get(serverConfig.host)
         .then((res) => {
-          self.currencySum = res.data.total;
-          self.$store.commit('SET_TEST_DATA', res.data.payload);
-          self.totalItems = res.data.count;
+          self.$store.commit('SET_TEST_DATA', res.data);
           self.$store.commit('SET_LOADING_STATE', false);
         })
         .catch(err => console.log(err));
@@ -131,16 +100,12 @@ export default {
     searchString() {
       this.$store.commit('SET_LOADING_STATE', true);
       const self = this;
-      const data = {
-        searchString: this.search
-      };
 
       setTimeout(function() {
-        axios.post(`${serverConfig.host}/searchString`, data)
+        axios.post(serverConfig.host, self.sendData)
           .then(res => {
-            self.currencySum = res.data.total;
-            self.$store.commit('SET_TEST_DATA', res.data.payload);
-            self.totalItems = res.data.count;
+            self.$store.commit('SET_CURRENT_PAGE', 0);
+            self.$store.commit('SET_TEST_DATA', res.data);
             self.$store.commit('SET_LOADING_STATE', false);
           })
           .catch(err => console.log(err));
@@ -150,37 +115,19 @@ export default {
     sortBy(type) {
       this.$store.commit('SET_LOADING_STATE', true);
 
-      this.$store.state.test.sort((a,b) => {
-        let modifier = 1;
-        if(this.currentSortDir === 'desc') modifier = -1;
-        if(a[this.currentSort] < b[this.currentSort]) return -1 * modifier;
-        if(a[this.currentSort] > b[this.currentSort]) return 1 * modifier;
-        return 0;
-      }).filter(item => {
-        return item.name.toLowerCase().includes(this.search.toLowerCase());
-      });
-      
-      if(type === this.currentSort) {
-        this.currentSortDir = this.currentSortDir==='asc'?'desc':'asc'
+      if(type === this.sendData.sortBy) {
+        this.sendData.order = this.sendData.order === 'asc' ? 'desc':'asc'
       };
-      this.currentSort = type;
 
       const self = this;
-      const data = {
-        // Обьект range - диапазон(offset) записей для каждой страницы
-        range: {
-          start: this.paginationRange.start,
-          end: this.paginationRange.end
-        },
-        sortBy: type,
-        order: this.currentSortDir,
-      };
+ 
+      this.$store.commit('CHANGE_ORDER', this.currentSortDir);
+      this.$store.commit('CHANGE_SORT_BY', type);
 
       setTimeout(function() {
-        axios.post(`${serverConfig.host}/sortBy`, data)
+        axios.post(serverConfig.host, self.sendData)
           .then(res => {
-            console.log(res.data)
-            self.$store.commit('SET_TEST_DATA', res.data.payload);
+            self.$store.commit('SET_TEST_DATA', res.data);
             self.$store.commit('SET_LOADING_STATE', false);
           })
           .catch(err => console.log(err));
@@ -204,18 +151,16 @@ export default {
         if(this.prevValue !== targetSpan.textContent) {
           this.$store.commit('SET_LOADING_STATE', true);
           const self = this;
-          const parametr = {
-            self, testItem
+       
+          this.sendData.newCurerncy = {
+            id: testItem.id,
+            currency: testItem.currency
           };
 
           setTimeout(function() {
-            const data = {
-              newCurerncy: testItem
-            };
-
-            axios.post(`${serverConfig.host}/recalculateTotal`, data)
+            axios.post(serverConfig.host, self.sendData)
               .then(res => {
-                self.currencySum = res.data.total;
+                self.$store.commit('UPDATE_TOTAL', res.data.total);
                 self.$store.commit('SET_LOADING_STATE', false);
               })
               .catch(err => console.log(err));

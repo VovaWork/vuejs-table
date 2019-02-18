@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import axios from 'axios';
 import serverConfig from '../config/config.json';
 
@@ -17,20 +18,21 @@ export default {
       itemsNumber: ''
     };
   },
+  computed: {
+    ...mapState([
+      'sendData'
+    ]),
+  },
   watch: {
     itemsNumber: function() {
       this.$store.commit('SET_LOADING_STATE', true);
-      this.$store.commit('CHANGE_TABLE_ITEMS_NUMBER', this.itemsNumber);
+      this.$store.commit('CHANGE_ITEMS_PER_PAGE', this.itemsNumber);
       const self = this;
-      const data = {
-        perPage: this.itemsNumber
-      };
 
       setTimeout(function() {
-        axios.post(`${serverConfig.host}/itemsNumber`, data)
+        axios.post(serverConfig.host, self.sendData)
           .then( res => {
-            console.log(res);
-            self.$store.commit('SET_TEST_DATA', res.data.payload)
+            self.$store.commit('SET_TEST_DATA', res.data)
             self.$store.commit('SET_LOADING_STATE', false);
           })
           .catch(err => console.log(err));

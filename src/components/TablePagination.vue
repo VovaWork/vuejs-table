@@ -5,7 +5,7 @@
       li(
           v-for='(button, index) in buttons'
           :key='index'
-          @click='pageChange(button.page, range)'
+          @click='pageChange(button.page, offset)'
           class='waves-effect'
           :class='{ active: button.active, disabled: button.disabled }') 
         a(
@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import { eventBus } from '../main';
+import { mapState } from 'vuex';
 import axios from 'axios';
 import serverConfig from '../config/config.json';
 
@@ -35,15 +35,13 @@ export default {
       default: 5
     }
   },
-  data() {
-    return {
-      currentPage: 0
-    };
-  },
   computed: {
-    range() {
-      let start = this.currentPage * Number(this.itemsPerPage); // currentPage|itemsPerPage
-      let end = start + Number(this.itemsPerPage); // start|itemsPerPage
+    ...mapState([
+      'sendData', 'currentPage'
+    ]),
+    offset() {
+      let start = this.currentPage * Number(this.sendData.perPage);
+      let end = start + Number(this.sendData.perPage);
 
       return {
         start, 
@@ -52,11 +50,11 @@ export default {
     },
 
     totalPages() {
-      return Math.ceil(this.totalItems / this.itemsPerPage); // totalItems|itemsPerPage - default values
+      return Math.ceil(this.sendData.count / this.sendData.perPage);
     },
 
     buttons() {
-      let buttons = this.visibleButtonValues.map(value => {  // visibleButtonValues - массив с 7 элементами который хранит числа, числа это номера страниц который отображаются
+      let buttons = this.visibleButtonValues.map(value => {  
         return value === '...'
           ? this.getButton(undefined, '...', true, false)
           : this.getButton(value)
@@ -78,15 +76,16 @@ export default {
         true
       ));
 
-      return buttons; // array of button objects
+
+      return buttons;
     },
 
-    visibleButtonValues() { // возвращает массив с 7 элементами - это числа(видимые страницы без первой,последней,следующей, предидущей)
-      let maxVisiblePagesWithoutActiveOne = this.maxVisiblePages - 1; // 4
-      let diffWithThreeDot = (maxVisiblePagesWithoutActiveOne / 2) + 1; // 2 + 1
-      let totalButtonsWithoutFirstLastNextAndPrevious = this.maxVisiblePages + 2; // 7
+    visibleButtonValues() { 
+      let maxVisiblePagesWithoutActiveOne = this.maxVisiblePages - 1;
+      let diffWithThreeDot = (maxVisiblePagesWithoutActiveOne / 2) + 1;
+      let totalButtonsWithoutFirstLastNextAndPrevious = this.maxVisiblePages + 2;
 
-      let startVisibleButton = this.currentPage - Math.floor(diffWithThreeDot); // 0 - 3
+      let startVisibleButton = this.currentPage - Math.floor(diffWithThreeDot);
       if (startVisibleButton < 1) {
         startVisibleButton = 1;
       };
@@ -110,21 +109,20 @@ export default {
       if (visibleButtonValues[0] > 1) {
         visibleButtonValues[0] = '...';
       };
-
       if (visibleButtonValues[visibleButtonValues.length - 1] < this.totalPages - 2) {
         visibleButtonValues[visibleButtonValues.length - 1] = '...';
       };
-
-      return visibleButtonValues; // array with 7 elements
+      
+      return visibleButtonValues; 
     }
   },
   watch: {
-    range: function() {
-      this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
+    offset: function() {
+      this.$store.commit('CHANGE_PAGINATION_OFFSET', this.offset);
     }
   },
   created() {
-    this.$store.commit('CHANGE_PAGINATION_RANGE', this.range);
+    this.$store.commit('CHANGE_PAGINATION_OFFSET', this.offset);
   },
   methods: {
     getButton(
@@ -144,29 +142,20 @@ export default {
       }
     },
 
-    pageChange(page, range) {
-      // Имеется ввиду что с помощью обьекта range на сервере обрежется массив обьектов с записями
-      // в диапазоне range.start, range.end. То есть для каждой страницы свой диапазон обьектов.
+    pageChange(page, offset) {
       this.$store.commit('SET_LOADING_STATE', true);
-      this.currentPage = page;
-      console.log(`${range.start} ${range.end} `);
+      this.$store.commit('SET_CURRENT_PAGE', page);
+      this.$store.commit('CHANGE_PAGINATION_OFFSET', offset);
 
       const self = this;
-      const data = {
-        range: {
-          start: range.start,
-          end: range.end
-        }
-      };
 
       setTimeout(function() {
-        axios.post(`${serverConfig.host}/pageChange`, data)
+        axios.post(serverConfig.host, self.sendData)
           .then(res => {
-            self.$store.commit('SET_TEST_DATA', res.data.payload);
+            self.$store.commit('SET_TEST_DATA', res.data);
             self.$store.commit('SET_LOADING_STATE', false);
           })
           .catch(err => console.log(err));
-        console.log(page);
       }, 800, self);
     },
   }

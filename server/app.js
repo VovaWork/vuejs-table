@@ -1,61 +1,69 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require("body-parser");
-const testData = require('../src/data/test.json');
+var Chance = require('chance');
+
 const app = express();
 const port = 3000;
 
-app.use(cors())
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: false }))
-const data = {
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+var chance = new Chance();
+
+const testPayload = new Array(5).fill().map(function() {
+  return {
+    id: chance["cf"](),
+    name: chance["first"](),
+    location: chance["city"](),
+    currency: chance["prime"](),
+  };
+});
+let data = {
+  "offset": {
+    "start": "0",
+    "end": "5"
+  },
   "searchString": "",
   "total": 228,
+  "newCurerncy": "",
   "count": 10000000,
   "perPage": 5, 
-  "sortBy": "name",
-  "order": "asc",
-  "payload": testData.payloadMain
+  "sortBy": "",
+  "order": "",
+  "payload": testPayload
 };
 
 app.get('/', (req, res) => {
-  data.total = 228;
-  data.count = 10000000;
-  data.payload = testData.payloadMain;
-
   res.send(data);
 });
 
-app.post('/searchString', (req, res) => {
-  console.log(req.body.searchString);
-  data.total = 3244;
-  data.count = 155370;
-  data.payload = testData.payloadSearch;
+app.post('/', (req, res) => {
+  
+  const oldSearchString = data.searchString;
+  data = req.body;
 
-  res.send(data)
-});
+  if(oldSearchString !== req.body.searchString) {
+    const randomCurrency = chance.prime();
+    data.total = randomCurrency;
+  };
+  
+  const newCurerncy = req.body.newCurerncy;
+  if(typeof newCurerncy === 'object') {
+    const randomCurrency = chance.prime();
+    data.total = randomCurrency;
+  };
 
-app.post('/itemsNumber', (req, res) => {
-  console.log(req.body.perPage);
-  data.payload = testData.payloadFiveItems;
-
-  res.send(data);
-});
-
-app.post('/sortBy', (req, res) => {
-  console.log(`${req.body.range.start} ${req.body.range.end} ${req.body.sortBy} ${req.body.order}`);
-  data.payload = testData.payloadSort;
-
-  res.send(data);
-});
-
-app.post('/recalculateTotal', (req, res) => {
-  console.log(req.body.newCurerncy);
-  res.send({total: 700}); 
-});
-
-app.post('/pageChange', (req, res) => {
-  console.log(`${req.body.range.start} ${req.body.range.end}`);
+  const perPage = Number(req.body.perPage);
+  const testData = new Array(perPage).fill().map(function() {
+    return {
+      id: chance["cf"](),
+      name: chance["first"](),
+      location: chance["city"](),
+      currency: chance["prime"](),
+    };
+  });
+  data.payload = testData;
 
   res.send(data);
 });

@@ -1,23 +1,34 @@
- import Vue from 'vue';
+import Vue from 'vue';
 import Vuex from 'vuex';
-// import test from '../data/test.json';
 
 Vue.use(Vuex);
 
 export const store = new Vuex.Store({
   state: {
     loading: true,
-    test: '',
     rowDetails: '',
-    tableItemsNumber: 5,
-    paginationRange: ''
+    currentPage: 0,
+    sendData: {
+      searchString: "",
+      total: "",
+      count: 10000000,
+      perPage: 5,
+      sortBy: "",
+      order: "",
+      payload: "",
+      newCurerncy: "",
+      offset: {
+        start: 0,
+        end: 5
+      }
+    }
   },
   mutations: {
     SET_LOADING_STATE(state, payload) {
       this.state.loading = payload;
     },
     SET_TEST_DATA(state, payload) {
-      this.state.test = payload;
+      this.state.sendData = payload;
     },
     SET_CURRENT_PAGE(state, payload) {
       this.state.currentPage = payload;
@@ -25,11 +36,20 @@ export const store = new Vuex.Store({
     UPDATE_ROW_DETAILS(state, payload) {
       this.state.rowDetails = payload;
     }, 
-    CHANGE_TABLE_ITEMS_NUMBER(state, payload) {
-      this.state.tableItemsNumber = payload;
+    UPDATE_TOTAL(state, payload) {
+      this.state.sendData.total = payload;
     },
-    CHANGE_PAGINATION_RANGE(state, payload) {
-      this.state.paginationRange = payload;
-    }
+    CHANGE_ITEMS_PER_PAGE(state, payload) {
+      this.state.sendData.perPage = payload;
+    },
+    CHANGE_PAGINATION_OFFSET(state, payload) {
+      this.state.sendData.offset = payload;
+    },
+    CHANGE_ORDER(state, payload) {
+      this.state.sendData.order = payload;
+    },
+    CHANGE_SORT_BY(state, payload) {
+      this.state.sendData.sortBy = payload;
+    },
   }
 });
